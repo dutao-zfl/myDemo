@@ -9,3 +9,4 @@ npm-debug.log
 .vs/
 test/unit/three.*.unit.js
 .xml
+.idea
