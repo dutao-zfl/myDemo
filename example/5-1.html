@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>跳舞的小人--练习版</title>
+    <style>
+        body, html {
+            position: absolute;
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        canvas {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background:#000;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+<canvas></canvas>
+
+<script>
+    var ground = 1, dancers = [], danceDrag = null, pointDrag = null;
+
+    var canvas = {
+      init() {
+        this.elem = document.querySelector("canvas");
+        this.resize();
+        window.addEventListener('resize', this.resize, false);
+        return this.elem.getContext("2d");
+      },
+      resize() {
+        this.width = this.elem.width = this.elem.offsetWidth;
+        this.height = this.elem.height = this.elem.offsetHeight;
+        ground = this.height > 500 ? 0.85 : 1.0;
+        for (var i = 0; i < dancers.length; i++) {
+          dancers[i].x = (i + 2) + this.width / 9;
+        }
+      }
+    }
+
+    var struct = {
+      points: [
+        {
+          x: 0,
+          y: -4,
+          f(s, d) {
+            this.y -= 0.01 * s;
+          }
+        },
+        {
+          x: 0,
+          y: -16,
+          f(s, d) {
+            this.y -= 0.02 * s * d;
+          }
+        },
+        {
+          x: 0,
+          y: 12,
+          f(s, d) {
+            this.y += 0.02 * s * d;
+          }
+        },
+        { x: -12, y: 0 },
+        { x: 12, y: 0 },
+        {
+          x: -3,
+          y: 34,
+          f(s, d) {
+            if (d > 0) {
+              this.x += 0.01 * s;
+              this.y -= 0.015 * s;
+            } else {
+              this.y += 0.02 * s;
+            }
+          }
+        },
+        {
+          x: 3,
+          y: 34,
+          f(s, d) {
+            if (d > 0) {
+              this.y += 0.02 * s;
+            } else {
+              this.x -= 0.01 * s;
+              this.y -= 0.015 * s;
+            }
+          }
+        },
+        {
+          x: -28,
+          y: 0,
+          f(s, d) {
+            this.x += this.vx * 0.035;
+            this.y -= 0.001 * s;
+          }
+        },
+        {
+          x: 28,
+          y: 0,
+          f(s, d) {
+            this.x += this.vx * 0.035;
+            this.y -= 0.001 * s;
+          }
+        },
+        {
+          x: -3,
+          y: 64,
+          f(s, d) {
+            this.y += 0.015 * s;
+            if (d > 0) {
+              this.y -= 0.01 * s;
+            } else {
+              this.y += 0.05 * s;
+            }
+          }
+        },
+        {
+          x: 3,
+          y: 64,
+          f(s, d) {
+            this.y += 0.015 * s;
+            if (d > 0) {
+              this.y += 0.05 * s;
+            } else {
+              this.y -= 0.01 * s;
+            }
+          }
+        }
+      ],
+      links: [
+        { p0: 3, p1: 7, size: 12, lum: 0.5 },
+        { p0: 1, p1: 3, size: 24, lum: 0.5 },
+        { p0: 1, p1: 0, size: 60, lum: 0.5, disk: 1 },
+        { p0: 5, p1: 9, size: 16, lum: 0.5 },
+        { p0: 2, p1: 5, size: 32, lum: 0.5 },
+        { p0: 1, p1: 2, size: 50, lum: 1 },
+        { p0: 6, p1: 10, size: 16, lum: 1.5 },
+        { p0: 2, p1: 6, size: 32, lum: 1.5 },
+        { p0: 4, p1: 8, size: 12, lum: 1.5 },
+        { p0: 1, p1: 4, size: 24, lum: 1.5 }
+      ]
+    };
+
+    for(var i = 0; i < 1; i++) {
+      dancers.push(new Robot(
+        i * 360 / 7,
+        80,
+        4,
+        (i + 2) * canvas.width / 9,
+        canvas.height * ground - 300,
+        struct
+      ))
+    }
+
+    var pointer = {
+      init(canvas) {
+        this.x = 0;
+        this.y = 0;
+        window.addEventListener('mousemove', this.move, false);
+        canvas.elem.addEventListener('mousemove', this.move, false);
+        window.addEventListener('mousedown', this.down, false);
+        window.addEventListener('mouseup', this.up, false);
+      },
+      move() {
+        var touchMode = e.targetTouches, pointer;
+        if (touchMode) {
+          e.preventDefault();
+          pointer = touchMode[0];
+        } else {
+          pointer = e;
+        }
+        this.x = pointer.clientX;
+        this.y = pointer.clientY;
+      },
+      down(e) {
+        this.move(e);
+        for (var i = 0;i < dancers.length; i++) {
+          var dancer = dancers[i];
+          for (var point of dancer.points) {
+            var dx = pointer.x - point.x;
+            var dy = pointer.y - point.y;
+            var d = Math.sqrt(Math.pow(dx, 2) + Math.pow(dy, 2));
+            if (d < 60) {
+              danceDrag = dancer;
+              pointDrag = point;
+              dancer.frame = 0
+            }
+          }
+        }
+      },
+      up(e) {
+        danceDrag = null;
+      }
+    }
+
+    function run (ctx) {
+      // requestAnimationFrame(run);
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = '#222';
+      ctx.fillRect(0, 0, canvas.width, canvas.height * 0.15);
+      ctx.fillRect(0, canvas.height * 0.85, canvas.width, canvas.height * 0.15);
+      for(var i = 0; i < dancers.length; i++) {
+        var dancer = dancers[i]
+        // dancer.update();
+        // dancer.draw();
+      }
+    }
+    window.onload = function () {
+      const ctx = canvas.init();
+      pointer.init(canvas);
+      run(ctx)
+    }
+
+    function Robot(color, light, size, x, y, struct) {
+      this.x = x;
+      this.points = [];
+      this.links = [];
+      this.frame = 0;
+      this.dir = 1;
+      this.size = size;
+      this.color = Math.round(color);
+      this.light = light;
+      for (var i = 0; i < struct.points.length; i++) {
+        var p = struct.points[i]
+        this.points.push(new Robot.points(
+          size * p.x + x,
+          size * p.y + y,
+          p.f
+        ))
+      }
+      for (var k = 0; i < struct.links.length; k++) {
+        var l = struct.links[k];
+        var p0 = this.points[l.p0];
+        var p1 = this.points[l.p1];
+        var dx = p0.x - p1.x;
+        var dy = p0.y - p1.y;
+        this.links.push(new Robot.links(
+          this,
+          p0,
+          p1,
+          Math.sqrt(dx * dx + dy * dy),
+          l.size / size * 3,
+          l.lum,
+          l.force,
+          l.disk
+        ))
+      }
+    }
+
+    Robot.prototype.points = function (x, y ,fn) {
+      this.x = x;
+      this.y = y;
+      this.w = w || 0.5;
+      this.fn = fn || null;
+      this.px = x;
+      this.py = y;
+      this.vx = 0;
+      this.vy = 0;
+    }
+    Robot.prototype.links = function (parent, p0, p1, dist, size, light, force, disk) {
+
+    }
+</script>
+</body>
+</html>
