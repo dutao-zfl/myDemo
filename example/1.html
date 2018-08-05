@@ -10,9 +10,9 @@
     </style>
 </head>
 <body>
-<script src="../../build/three.js"></script>
-<script src="../js/controls/TrackballControls.js"></script>
-<script src="../js/loaders/TDSLoader.js"></script>
+<script src="../build/three.js"></script>
+<script src="js/controls/TrackballControls.js"></script>
+<script src="js/loaders/TDSLoader.js"></script>
 
 <script>
     var container, controls;
@@ -37,18 +37,17 @@
       scene.add( directionalLight );
 
       var loader = new THREE.TextureLoader();
-      var normal = loader.load('../models/3ds/portalgun/textures/normal.jpg');
+      var normal = loader.load('models/3ds/portalgun/textures/normal.jpg');
 
       loader = new THREE.TDSLoader();
-      loader.setPath('../models/3ds/portalgun/textures/');
-      loader.load('../models/3ds/portalgun/portalgun.3ds', function (object) {
+      loader.setPath('models/3ds/portalgun/textures/');
+      loader.load('models/3ds/portalgun/portalgun.3ds', function (object) {
         object.traverse(function (child) {
           if (child instanceof THREE.Mesh) {
             child.material.normalMap = normal;
           }
         })
         scene.add( object )
-        // renderer.render(scene, camera)
       })
 
       renderer = new THREE.WebGLRenderer();
@@ -57,8 +56,6 @@
       container.appendChild(renderer.domElement);
 
       window.addEventListener('resize', resize, false);
-
-
     }
 
     function resize() {
@@ -74,7 +71,6 @@
       renderer.render(scene, camera)
       requestAnimationFrame(animate);
     }
-
 </script>
 </body>
 </html>

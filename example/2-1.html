@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>基本组件</title>
+</head>
+<body>
+<div id="container"></div>
+
+<script src="../build/three.js"></script>
+<script src="js/libs/dat.gui.min.js"></script>
+<script src="js/libs/stats.min.js"></script>
+
+<script>
+    var scene, camera, container, renderer, gui, stats;
+    function addMesh() {
+        var pts = []
+        var detail = .1;
+        var radius = 3;
+        for (var angle = 0; angle < Math.PI; angle += detail) {
+            pts.push(new THREE.Vector3(Math.cos(angle) * radius, 0, Math.sin(angle) * radius))
+        }
+        var points = [
+            new THREE.Vector3(2, 2, 2),
+            new THREE.Vector3(2, 2, -2),
+            new THREE.Vector3(-2, 2, -2),
+            new THREE.Vector3(-2, 2, 2),
+            new THREE.Vector3(2, -2, 2),
+            new THREE.Vector3(2, -2, -2),
+            new THREE.Vector3(-2, -2, -2),
+            new THREE.Vector3(-2, -2, 2)
+        ]
+        var geoMetries = [
+            // 圆柱体
+            new THREE.CylinderGeometry(1, 4, 4),
+            // 正方体
+            new THREE.BoxGeometry(2, 2, 2),
+            // 球体
+            new THREE.SphereGeometry(2),
+            // 多面体
+            new THREE.IcosahedronGeometry(4),
+            // Lathe
+            new THREE.LatheGeometry(pts, 12),
+            // 自定义凸面体
+            // new THREE.ConvexGeometry(points),
+            // Octahedron
+            new THREE.OctahedronGeometry(3),
+            // Parametric
+//            new THREE.ParametricGeometry(THREE.ParametricGeometries.mobius3d, 20, 10),
+            // 面
+            new THREE.TetrahedronGeometry(3),
+            // 圆环
+            new THREE.TorusGeometry(3, 1, 10, 10),
+            // 环面纽结
+            new THREE.TorusKnotGeometry(3, 0.5, 50, 20)
+        ]
+        var j = 0;
+        for (var i = 0; i < geoMetries.length; i++) {
+//            var cubeMaterial = new THREE.MeshLambertMaterial({wireframe: true, color:Math.random() * 0xffffff})
+            var materials = [
+                new THREE.MeshLambertMaterial({color: Math.random() * 0xffffff, flatShading: THREE.FlatShading}),
+                new THREE.MeshBasicMaterial({color: 0x000000, wireframe: true})
+            ];
+//            var mesh = THREE.SceneUtils.createMultiMaterialObject(geoMetries[i], materials);
+//            mesh.traverse(function (e) {
+//                e.castShadow = true
+//            });
+            var mesh = new THREE.Mesh(geoMetries[i], materials);
+            mesh.castShadow = true;
+            mesh.position.x = -24 + ((i % 4) * 12);
+            mesh.position.y = 4;
+            mesh.position.z = -8 + (j * 12);
+
+            if ((i + 1) % 4 === 0) j++
+            scene.add(mesh);
+        }
+    }
+    function init() {
+        scene = new THREE.Scene();
+
+        camera = new THREE.PerspectiveCamera(70, window.innerWidth, window.innerHeight);
+        camera.position.z = 500;
+
+        container = document.getElementById('container');
+
+        renderer = new THREE.WebGLRenderer({antialias: true});
+        renderer.setPixelRatio(window.devicePixelRatio);
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        container.appendChild(renderer.domElement);
+
+        gui = new dat.GUI({width: 350});
+//        gui.add(controls, 'rotationSpeed', controls.rotationSpeed);
+//        gui.add(controls, 'addCube', controls.addCube);
+//        gui.add(controls, 'removeCube', controls.removeCube);
+//        gui.add(controls, 'outputObjects', controls.outputObjects);
+//        gui.add(controls, 'numberOfObjects', controls.numberOfObjects).listen();
+        addMesh();
+        stats = new Stats();
+        container.appendChild(stats.dom);
+
+        window.addEventListener('resize', onWindowResize, false);
+    };
+    function animate() {
+        requestAnimationFrame(animate);
+        render();
+    }
+    function render() {
+        renderer.render(scene, camera);
+    }
+    function onWindowResize() {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix()
+
+        renderer.setSize(window.innerWidth, window.innerHeight);
+    }
+    init();
+    animate();
+    var controls = new function () {
+        this.rotationSpeed = 0.02;
+        this.numberOfObjects = scene.children.length;
+
+        this.removeCube = function () {
+            var allChildren = scene.children;
+            var lastObject = allChildren[allChildren.length - 1];
+            if (lastObject instanceof THREE.Mesh) {
+                scene.remove(lastObject);
+                this.numberOfObjects = scene.children.length;
+            }
+        };
+
+        this.addCube = function () {
+            var cubeSize = Math.ceil((Math.rendom() * 3));
+            var cubeGeoMetry = new THREE.BoxGeometry(cubeSize, cubeSize,cubeSize);
+            var cubeMaterial = new THREE.MeshLambertMaterial({
+                color: Math.rendom() * 0xffffff
+            });
+            var cube = new THREE.Mesh(cubeGeoMetry, cubeMaterial);
+            cube.castShadow = true;
+            cube.name = "cube-" + scene.children.length;
+
+            cube.position.x = -30 + Math.round(Math.random() * planeGeoMetry.parameters.width);
+            cube.position.y = Math.round(Math.random() * 5);
+            cube.position.z = -20 + Math.round(Math.random() * planeGeoMetry.parameters.height);
+
+            scene.add(cube);
+            this.numberOfObjects = scene.children.length;
+        };
+
+        this.outputObjects = function () {
+            console.log(scene.children)
+        };
+    }
+</script>
+</body>
+</html>
