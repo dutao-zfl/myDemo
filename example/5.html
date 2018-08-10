@@ -294,13 +294,13 @@
     let pointDrag = null;
     // ---- 主要循环 ----
     const run = () => {
-    // requestAnimationFrame(run);
+    requestAnimationFrame(run);
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.fillStyle = "#222";
     ctx.fillRect(0, 0, canvas.width, canvas.height * 0.15);
     ctx.fillRect(0, canvas.height * 0.85, canvas.width, canvas.height * 0.15);
     for (const dancer of dancers) {
-      // dancer.update();
+      dancer.update();
       dancer.draw();
     }
   };
@@ -409,7 +409,7 @@
       ]
     };
 
-    for (let i = 0; i < 1; i++) {
+    for (let i = 0; i < 6; i++) {
       dancers.push(
         new Robot(
           i * 360 / 7,

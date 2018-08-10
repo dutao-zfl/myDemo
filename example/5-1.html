@@ -26,8 +26,12 @@
 <canvas></canvas>
 
 <script>
-  var ground = 1, dancers = [], danceDrag = null, pointDrag = null, ctx = null;
-
+  var ground = 1, // 地面的距离
+    dancers = [], // 小人的数组
+    danceDrag = null, // 判断是否拖动小人的线
+    pointDrag = null, // 判断是否拖动小人的点
+    ctx = null;// 画布
+  // 构建画布
   var canvas = {
     init() {
       this.elem = document.querySelector("canvas");
@@ -47,7 +51,7 @@
       }
     }
   }
-
+  // 小人的坐标与连线，重要
   var struct = {
     points: [
       {
@@ -151,7 +155,7 @@
       {p0: 1, p1: 4, size: 24, lum: 1.5}
     ]
   };
-
+  // 初始化画布，添加画布事件
   var pointer = {
     init(canvas) {
       this.x = 0;
@@ -201,20 +205,24 @@
       danceDrag = null;
     }
   }
-
-  function run(ctx) {
-    // requestAnimationFrame(run);
+  // 绘制小人的方法，并让小人动起来
+  function run() {
+    requestAnimationFrame(run);
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.fillStyle = '#222';
     ctx.fillRect(0, 0, canvas.width, canvas.height * 0.15);
     ctx.fillRect(0, canvas.height * 0.85, canvas.width, canvas.height * 0.15);
     for (var i = 0; i < dancers.length; i++) {
       var dancer = dancers[i];
-      // dancer.update();
+      dancer.update();
       dancer.draw();
     }
   }
 
+  // 小人构造：点、线
+  /*@params draw 绘制小人
+  * @param update 更新小人的坐标
+  * */
   function Robot(color, light, size, x, y, struct) {
     this.x = x;
     this.points = [];
@@ -251,7 +259,7 @@
         l.disk
       ))
     }
-
+    // 将小人画到画布上
     this.draw = function () {
       for (var i = 0; i < this.links.length; i++) {
         var link =  this.links[i]
@@ -286,8 +294,80 @@
         }
       }
     }
-  }
+    // 更新小人的位置信息，包含拖动事件
+    this.update = function () {
+      if (++this.frame % 20 === 0) this.dir = -this.dir
+      if (this.danceDrag && this === danceDrag && this.size < 16 && this.frame > 600) {
+        danceDrag = null
+        dancers.push(new Robot(
+          this.color,
+          this.light * 1.25,
+          this.size * 2,
+          pointer.x,
+          pointer.y - 100 * this.size * 2,
+          struct
+        ))
+      }
+      dancers.sort(function (t1, t2) {
+        return t1.size - t2.size
+      })
+      // 初始化线
+      for (var i = 0; i < this.links.length; i++) {
+        var link = this.links[i]
+        var p0 = link.p0;
+        var p1 = link.p1;
+        var dx = p0.x - p1.x;
+        var dy = p0.y - p1.y;
+        var dist = Math.sqrt(dx * dx + dy * dy);
 
+        if (dist) {
+          var tw = p0.w + p1.w;
+          var r0 = p0.w / tw;
+          var r1 = p0.w / tw;
+          var dz = (link.distance - dist) * link.force;
+          var sx = dx / dist * dz;
+          var sy = dy / dist * dz;
+          p1.x -= sx * r0;
+          p1.y -= sy * r0;
+          p0.x += sx * r1;
+          p0.y += sy * r1;
+        }
+      }
+      // 初始化点
+      for (var k = 0; k < this.points.length; k++) {
+        var point = this.points[k]
+        if (danceDrag && this === danceDrag && point === pointDrag) {
+          point.x += (pointer.x - point.x) * 0.1;
+          point.y += (pointer.y - point.y) * 0.1;
+        }
+        if (this !== danceDrag) {
+          point.fn && point.fn(16 * Math.sqrt(this.size), this.dir);
+        }
+        point.vx = point.x - point.px;
+        point.vy = point.y - point.py;
+        point.px = point.x;
+        point.py = point.y;
+        point.vx *= 0.995;
+        point.vy *= 0.995;
+        point.x += point.vx;
+        point.y += point.vy + 0.01;
+      }
+      // 地面的判断
+      for (var g = 0; g < this.links.length; g++) {
+        var link = this.links[g];
+        var p1 = link.p1;
+        if (p1.y > canvas.height * ground - link.size * 0.5 ) {
+          p1.y = canvas.height * ground - link.size * 0.5;
+          p1.x -= p1.vx;
+          p1.vx = 0;
+          p1.vy = 0;
+        }
+        // 自动居中
+        this.points[3].x += (this.x - this.points[3].x) * 0.01
+      }
+    }
+  }
+  // 点的生成
   function Points(x, y, fn, w) {
     this.x = x;
     this.y = y;
@@ -298,7 +378,7 @@
     this.vx = 0;
     this.vy = 0;
   }
-
+  // 线的生成
   function Links(parent, p0, p1, dist, size, light, force, disk) {
     function stroke(color, axis) {
       var image = document.createElement('canvas');
@@ -308,7 +388,7 @@
       var ict = image.getContext('2d');
       ict.beginPath();
       ict.lineCap = 'round';
-      ict.lineWidth = 'size';
+      ict.lineWidth = size;
       ict.strokeStyle = color;
       if (disk) {
         ict.arc(size * 0.5 + dist, size * 0.5, size * 0.5, 0, Math.PI * 2);
@@ -344,7 +424,7 @@
   window.onload = function () {
     ctx = canvas.init();
 
-    for (var i = 0; i < 6; i++) {
+    for (var i = 0; i < 10; i++) {
       dancers.push(new Robot(
         i * 360 / 7,
         80,
@@ -356,7 +436,7 @@
     }
 
     pointer.init(canvas);
-    run(ctx)
+    run()
   }
 </script>
 </body>
