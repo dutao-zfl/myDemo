@@ -21,19 +21,21 @@
         // 获取斜率
         var k = (b.y - a.y) / (b.x - a.x);
         // 获取角度
-        var rotate = Math.atan(k) * 180 / Math.PI;
+//        var rotate = Math.atan(k) * 180 / Math.PI;
+        var rotate = Math.atan2(b.y - a.y, b.x - a.x);
         // 根据斜率的正负值算出具体旋转的角度
-        return k < 0 ? rotate + 90 : rotate - 90;
-//        return rotate;
+//        return k < 0 ? rotate + 90 : rotate - 90;
+        return rotate;
     }
     // 移动点
     function move(x, y, reg) {
         context.save();
         context.clearRect(0, 0, canvas.width, canvas.height);
         context.beginPath();
-        // context.translate(x - 12.5, y - 12.5);
-        // context.rotate(reg);
-        context.rect(x - 12.5, y - 12.5, 25, 25);
+        var key = reg <= 0 ? 1 : -1;
+        context.translate(x + key * 12.5, y + key * 12.5);
+        context.rotate(reg);
+        context.rect(0, 0, 25, 25);
         context.fillStyle = '#f0f';
         context.fill();
         context.closePath();
@@ -77,10 +79,11 @@
         const timer  = setInterval(function () {
             if (time <= duration) {
                 curPoint = pathElement.getPointAtLength(step);
-                const x = parseInt(curPoint.x);
-                const y = parseInt(curPoint.y);
-                const reg = getRotate(prePoint, curPoint);
+                var x = curPoint.x;
+                var y = curPoint.y;
+                var reg = getRotate(prePoint, curPoint);
                 func(x, y, reg);
+                debugger
                 step++;
                 time++;
                 prePoint = curPoint
