@@ -25,7 +25,7 @@
     // var rotate = Math.atan(k) * Math.PI / 180;
     var rotate = Math.atan2(b.y - a.y, b.x - a.x);
     // 根据斜率的正负值算出具体旋转的角度
-    // return k < 0 ? rotate + 90 : rotate - 90;
+    // return k < 0 ? rotate - 90 : rotate + 90;
     return rotate;
   }
 
@@ -87,7 +87,6 @@
         const y = parseInt(curPoint.y);
         const reg = getRotate(prePoint, curPoint);
         func(x, y, reg);
-        debugger
         step++;
         time++;
         prePoint = curPoint
