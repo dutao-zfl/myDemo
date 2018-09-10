@@ -51,12 +51,14 @@
         var curPosition = initPosition;
 
         function getRotate(a, b) {
-            // 获取斜率
-            var k = (b.y - a.y) / (b.x - a.x);
-            // 获取角度
-            var rotate = Math.atan(k) * 180 / Math.PI;
-            // 根据斜率的正负值算出具体旋转的角度
-            return k < 0 ? rotate + 90 : rotate - 90;
+          // 获取斜率
+          var k = (b.y - a.y) / (b.x - a.x);
+          // 获取角度
+          // var rotate = Math.atan(k) * Math.PI / 180;
+          var rotate = Math.atan2(b.y - a.y, b.x - a.x);
+          // 根据斜率的正负值算出具体旋转的角度
+          // return k < 0 ? rotate + 90 : rotate - 90;
+          return rotate;
         }
 
         $car.setAttribute('x', initPosition.x);

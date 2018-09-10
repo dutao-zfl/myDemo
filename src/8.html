@@ -4,111 +4,119 @@
     <meta charset="UTF-8">
     <title>canvas实现自定义路径动画</title>
     <style>
-        canvas, svg{
+        canvas, svg {
             position: absolute;
         }
     </style>
 </head>
 <body>
-<svg width="500" height="500" xmlns="http://www.w3.org/2000/svg">
-    <path stroke="#f0f" fill="none" d="M0,0 C8,33.90861 25.90861,16 48,16 C70.09139,16 88,33.90861 88,56 C88,78.09139 105.90861,92 128,92 C150.09139,92 160,72 160,56 C160,40 148,24 128,24 C108,24 96,40 96,56 C96,72 105.90861,92 128,92 C154,93 168,78 168,56 C168,33.90861 185.90861,16 208,16 C230.09139,16 248,33.90861 248,56 C248,78.09139 230.09139,96 208,96 L48,96 C25.90861,96 8,78.09139 8,56 Z'"></path>
+<svg display="none" width="500" height="500" xmlns="http://www.w3.org/2000/svg">
+    <path stroke="#f0f" fill="none"
+          d="M0,0 C8,33.90861 25.90861,16 48,16 C70.09139,16 88,33.90861 88,56 C88,78.09139 105.90861,92 128,92 C150.09139,92 160,72 160,56 C160,40 148,24 128,24 C108,24 96,40 96,56 C96,72 105.90861,92 128,92 C154,93 168,78 168,56 C168,33.90861 185.90861,16 208,16 C230.09139,16 248,33.90861 248,56 C248,78.09139 230.09139,96 208,96 L48,96 C25.90861,96 8,78.09139 8,56 Z'"></path>
 </svg>
 <canvas id="canvas" width="500" height="500"></canvas>
 
 <script>
-    // 获取旋转的角度
-    function getRotate(a, b) {
-        // 获取斜率
-        var k = (b.y - a.y) / (b.x - a.x);
-        // 获取角度
-        var rotate = Math.atan(k) * 180 / Math.PI;
-        // 根据斜率的正负值算出具体旋转的角度
-        return k < 0 ? rotate + 90 : rotate - 90;
-//        return rotate;
-    }
-    // 移动点
-    function move(x, y, reg) {
-        context.save();
-        context.clearRect(0, 0, canvas.width, canvas.height);
-        context.beginPath();
-        // context.translate(x - 12.5, y - 12.5);
-        // context.rotate(reg);
-        context.rect(x - 12.5, y - 12.5, 25, 25);
-        context.fillStyle = '#f0f';
-        context.fill();
-        context.closePath();
-        context.restore();
-        context.save();
-        drawCircle();
-        context.restore();
-    }
-    // 用svg的path绘制canvas
-    function drawCircle() {
-        context.beginPath();
-        context.moveTo(0,0);
-        context.bezierCurveTo(8,33.90861,25.90861,16,48, 16);
-        context.bezierCurveTo(70.09139,16,88,33.90861,88,56);
-        context.bezierCurveTo(88,78.09139,105.90861,92,128,92);
-        context.bezierCurveTo(150.09139,92,160,72,160,56);
-        context.bezierCurveTo(160,40,148,24,128,24);
-        context.bezierCurveTo(108,24,96,40,96,56);
-        context.bezierCurveTo(96,72,105.90861,92,128,92);
-        context.bezierCurveTo(154,93,168,78,168,56);
-        context.bezierCurveTo(168,33.90861,185.90861,16,208,16);
-        context.bezierCurveTo(230.09139,16,248,33.90861,248,56);
-        context.bezierCurveTo(248,78.09139,230.09139,96,208,96);
-        context.lineTo(48,96);
-        context.bezierCurveTo(25.90861,96,8,78.0913,8,56);
-        context.lineTo(0,0);
-        context.stroke();
-    }
-    // 通过svg获取上一点和下一个点，以及旋转的角度
-    function customizePath(path, func) {
-        const pathElement = document.createElementNS('http://www.w3.org/2000/svg', 'path')
-        pathElement.setAttributeNS(null, 'd', path);
+  // 获取旋转的角度
+  function getRotate(a, b) {
+    // 获取斜率
+    var k = (b.y - a.y) / (b.x - a.x);
+    // 获取角度
+    // var rotate = Math.atan(k) * Math.PI / 180;
+    var rotate = Math.atan2(b.y - a.y, b.x - a.x);
+    // 根据斜率的正负值算出具体旋转的角度
+    // return k < 0 ? rotate + 90 : rotate - 90;
+    return rotate;
+  }
 
-        const length = pathElement.getTotalLength();
-        const duration = 1000;
-        const interval = length / duration;
-        var time = 0, step = 0;
-        var prePoint = pathElement.getPointAtLength(0);
-        var curPoint = prePoint;
+  // 移动点
+  function move(x, y, reg) {
+    context.clearRect(0, 0, canvas.width, canvas.height);
+    context.save();
+    context.beginPath();
+    context.translate(x, y);
+    context.rotate(reg);
+    console.log(reg)
+    context.rect(-12.5, -12.5, 25, 25);
+    context.fillStyle = '#f0f';
+    context.fill();
+    context.closePath();
+    context.restore();
+    context.save();
+    drawCircle();
+    context.restore();
+  }
 
-        const timer  = setInterval(function () {
-            if (time <= duration) {
-                curPoint = pathElement.getPointAtLength(step);
-                const x = parseInt(curPoint.x);
-                const y = parseInt(curPoint.y);
-                const reg = getRotate(prePoint, curPoint);
-                func(x, y, reg);
-                step++;
-                time++;
-                prePoint = curPoint
-            } else {
+  // 用svg的path绘制canvas
+  function drawCircle() {
+    context.beginPath();
+    context.moveTo(0, 0);
+    context.bezierCurveTo(8, 33.90861, 25.90861, 16, 48, 16);
+    context.bezierCurveTo(70.09139, 16, 88, 33.90861, 88, 56);
+    context.bezierCurveTo(88, 78.09139, 105.90861, 92, 128, 92);
+    context.bezierCurveTo(150.09139, 92, 160, 72, 160, 56);
+    context.bezierCurveTo(160, 40, 148, 24, 128, 24);
+    context.bezierCurveTo(108, 24, 96, 40, 96, 56);
+    context.bezierCurveTo(96, 72, 105.90861, 92, 128, 92);
+    context.bezierCurveTo(154, 93, 168, 78, 168, 56);
+    context.bezierCurveTo(168, 33.90861, 185.90861, 16, 208, 16);
+    context.bezierCurveTo(230.09139, 16, 248, 33.90861, 248, 56);
+    context.bezierCurveTo(248, 78.09139, 230.09139, 96, 208, 96);
+    context.lineTo(48, 96);
+    context.bezierCurveTo(25.90861, 96, 8, 78.0913, 8, 56);
+    context.lineTo(0, 0);
+    context.stroke();
+  }
+
+  // 通过svg获取上一点和下一个点，以及旋转的角度
+  function customizePath(path, func) {
+    const pathElement = document.createElementNS('http://www.w3.org/2000/svg', 'path')
+    pathElement.setAttributeNS(null, 'd', path);
+
+    const length = pathElement.getTotalLength();
+    const duration = 1000;
+    const interval = length / duration;
+    var time = 0, step = 1;
+    var prePoint = pathElement.getPointAtLength(0);
+    var curPoint = prePoint;
+
+    const timer = setInterval(function () {
+      if (time <= duration) {
+        curPoint = pathElement.getPointAtLength(step);
+        const x = parseInt(curPoint.x);
+        const y = parseInt(curPoint.y);
+        const reg = getRotate(prePoint, curPoint);
+        func(x, y, reg);
+        debugger
+        step++;
+        time++;
+        prePoint = curPoint
+        // preReg = curReg
+      } else {
 //                clearInterval(timer);
-                step = 0;
-                time = 0;
-            }
-        }, interval)
-    }
+        step = 0;
+        time = 0;
+      }
+    }, interval)
+  }
 
-    const path = 'M0,0' +
-        'C8,33.90861 25.90861,16 48,16' +
-        'C70.09139,16 88,33.90861 88,56' +
-        'C88,78.09139 105.90861,92 128,92' +
-        'C150.09139,92 160,72 160,56' +
-        'C160,40 148,24 128,24' +
-        'C108,24 96,40 96,56' +
-        'C96,72 105.90861,92 128,92' +
-        'C154,93 168,78 168,56' +
-        'C168,33.90861 185.90861,16 208,16' +
-        'C230.09139,16 248,33.90861 248,56' +
-        'C248,78.09139 230.09139,96 208,96 L48,96' +
-        'C25.90861,96 8,78.09139 8,56 Z';
-    const canvas = document.querySelector('canvas');
-    const context = canvas.getContext('2d');
+  const path = 'M0,0' +
+    'C8,33.90861 25.90861,16 48,16' +
+    'C70.09139,16 88,33.90861 88,56' +
+    'C88,78.09139 105.90861,92 128,92' +
+    'C150.09139,92 160,72 160,56' +
+    'C160,40 148,24 128,24' +
+    'C108,24 96,40 96,56' +
+    'C96,72 105.90861,92 128,92' +
+    'C154,93 168,78 168,56' +
+    'C168,33.90861 185.90861,16 208,16' +
+    'C230.09139,16 248,33.90861 248,56' +
+    'C248,78.09139 230.09139,96 208,96 L48,96' +
+    'C25.90861,96 8,78.09139 8,56 Z';
+  const canvas = document.querySelector('canvas');
+  const context = canvas.getContext('2d');
 
-    customizePath(path, move)
+  customizePath(path, move)
 </script>
 </body>
 </html>
